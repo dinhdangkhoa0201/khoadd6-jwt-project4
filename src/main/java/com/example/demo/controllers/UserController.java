@@ -1,6 +1,8 @@
 package com.example.demo.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +19,7 @@ import com.example.demo.requests.CreateUserRequest;
 
 @RestController
 @RequestMapping("/api/user")
+@Slf4j
 public class UserController {
 	
 	@Autowired
@@ -33,17 +36,27 @@ public class UserController {
 	@GetMapping("/{username}")
 	public ResponseEntity<UserEntity> findByUserName(@PathVariable String username) {
 		UserEntity user = userRepository.findByUsername(username);
-		return user == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(user);
+		if (user == null) {
+			log.error("UserName is not exist");
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok(user);
 	}
 	
 	@PostMapping("/create")
 	public ResponseEntity<UserEntity> createUser(@RequestBody CreateUserRequest createUserRequest) {
 		UserEntity user = new UserEntity();
-		user.setUsername(createUserRequest.getUsername());
-		CartEntity cart = new CartEntity();
-		cartRepository.save(cart);
-		user.setCart(cart);
-		userRepository.save(user);
+		try {
+			user.setUsername(createUserRequest.getUsername());
+			user.setPassword(createUserRequest.getPassword());
+			CartEntity cart = new CartEntity();
+			cartRepository.save(cart);
+			user.setCart(cart);
+			user = userRepository.save(user);
+			log.debug(HttpStatus.CREATED + " - Create User Successfully");
+		} catch (Exception e) {
+			log.error(e.getMessage());
+		}
 		return ResponseEntity.ok(user);
 	}
 	

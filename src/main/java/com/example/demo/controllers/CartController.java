@@ -3,6 +3,7 @@ package com.example.demo.controllers;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import com.example.demo.requests.ModifyCartRequest;
 
 @RestController
 @RequestMapping("/api/cart")
+@Slf4j
 public class CartController {
 	
 	@Autowired
@@ -36,10 +38,12 @@ public class CartController {
 	public ResponseEntity<CartEntity> addTocart(@RequestBody ModifyCartRequest request) {
 		UserEntity user = userRepository.findByUsername(request.getUsername());
 		if(user == null) {
+			log.error("UserName is not exist, " + request.getUsername());
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
 		Optional<ItemEntity> item = itemRepository.findById(request.getItemId());
 		if(!item.isPresent()) {
+			log.error("Item is not exist with id: " + request.getUsername());
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
 		CartEntity cart = user.getCart();
